@@ -1,6 +1,6 @@
 # q2sql - Convert URL query to SQL
 
-It turns this `?fields[articles]=id,title,createdAt&filter[title]contains:bitcoin&sort-createdAt`
+It turns this `?fields[articles]=id,title,createdAt&filter[title]contains:bitcoin&sort=-createdAt`
 
 into this `SELECT id, title, created_at FROM articles WHERE title LIKE "%bitcoin%" ORDER BY created_at DESC`
 
@@ -13,7 +13,7 @@ It can be used in conjunction with any ORM that supports raw sql execution or wi
 
 ## Note
 
-The package uses [https://github.com/velmie/qparser](github.com/velmie/qparser) to work with the request query.
+The package uses [github.com/velmie/qparser](https://github.com/velmie/qparser) to work with the request query.
 See the QParser documentation for query string syntax and other details.
 
 ## Usage
@@ -76,7 +76,7 @@ In order to use filtering, it should be specified: which filters can be applied 
 and how to create conditions based on the filter names. The package provides everything needed for this.
 
 For example, let's consider the following task: it is required to implement filtering by the list of ids (id field).
-```
+```go
     //...
 import (
 	"github.com/velmie/q2sql"
