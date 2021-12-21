@@ -2,8 +2,10 @@ package extension
 
 import (
 	"context"
-	"github.com/velmie/q2sql"
+
 	"github.com/velmie/qparser"
+
+	"github.com/velmie/q2sql"
 )
 
 // DefaultLimit is the extension that sets the query limit if it has not been set

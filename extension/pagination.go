@@ -12,6 +12,13 @@ import (
 
 const Unlimited = int64(-1)
 
+type LimitOffsetPaginationParams struct {
+	MaxLimit            int64
+	MaxOffset           int64
+	LimitParameterName  string
+	OffsetParameterName string
+}
+
 // LimitOffsetPagination is the extension
 // that sets limit and offset based on the corresponding fields of the given query.Page
 func LimitOffsetPagination(maxLimit, maxOffset int64) q2sql.Extension {
@@ -39,6 +46,40 @@ func LimitOffsetPagination(maxLimit, maxOffset int64) q2sql.Extension {
 					return fmt.Errorf("page offset cannot be greater than %d", maxOffset)
 				}
 				builder.Offset(offset)
+			}
+		}
+		return nil
+	}
+}
+
+// LimitNumberPagination is the extension
+// that sets limit and offset based on the corresponding fields of the given query.Page
+// where offset is a result of the expression limit * (number - 1)
+func LimitNumberPagination(maxLimit int64) q2sql.Extension {
+	return func(_ context.Context, query *qparser.Query, builder *q2sql.SelectBuilder) error {
+		page := query.Page
+		if page == nil {
+			return nil
+		}
+		if page.Limit == "" {
+			return nil
+		}
+		limit, err := strconv.ParseUint(page.Limit, 10, 32)
+		if err != nil {
+			return fmt.Errorf("page limit must be unsigned integer, got %q", page.Limit)
+		}
+		if maxLimit != Unlimited && int64(limit) > maxLimit {
+			return fmt.Errorf("page limit cannot be greater than %d", maxLimit)
+		}
+		builder.Limit(limit)
+
+		if page.Number != "" {
+			number, err := strconv.ParseUint(page.Number, 10, 32)
+			if err != nil {
+				return fmt.Errorf("page number must be unsigned integer, got %q", page.Number)
+			}
+			if number != 1 {
+				builder.Offset(limit * (number - 1))
 			}
 		}
 		return nil
