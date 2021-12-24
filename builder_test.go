@@ -15,6 +15,7 @@ type resourceBuilderTest struct {
 	sql         string
 	args        []interface{}
 	expectedErr bool
+	sb          func() *SelectBuilder
 }
 
 const (
@@ -85,6 +86,16 @@ var resourceBuilderTests = []resourceBuilderTest{
 		query:       fmt.Sprintf("fields[%s]=updatedAt", resourceName),
 		expectedErr: true,
 	},
+	{
+		title: "With extra params",
+		query: fmt.Sprintf("fields[%s]=%s,%s", resourceName, resourceFieldID, resourceFieldTitle),
+		sql:   fmt.Sprintf("SELECT %s, %s FROM %s WHERE id = ?", resourceFieldID, resourceFieldTitle, resourceName),
+		args:  []interface{}{"1"},
+		sb: func() *SelectBuilder {
+			sb := new(SelectBuilder)
+			return sb.Where(&RawSqlWithArgs{"id = ?", []interface{}{"1"}})
+		},
+	},
 }
 
 func TestNewResourceSelectBuilder(t *testing.T) {
@@ -149,7 +160,11 @@ func TestNewResourceSelectBuilder(t *testing.T) {
 		if err != nil {
 			t.Fatalf("%sqparser.ParseQuery(%q) returned unexpected error: %s", meta, tt.query, err)
 		}
-		sqlizer, err := builder.Build(ctx, query)
+		var sb []*SelectBuilder
+		if tt.sb != nil {
+			sb = []*SelectBuilder{tt.sb()}
+		}
+		sqlizer, err := builder.Build(ctx, query, sb...)
 		if !tt.expectedErr && err != nil {
 			t.Errorf("%sunexpected error %s", meta, err)
 			continue

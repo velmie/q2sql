@@ -9,7 +9,7 @@ import (
 
 type Builder interface {
 	// Build builds sql query
-	Build(ctx context.Context, query *qparser.Query) (Sqlizer, error)
+	Build(ctx context.Context, query *qparser.Query, sb ...*SelectBuilder) (*SelectBuilder, error)
 }
 
 // Extension is used in order to extend a builder
@@ -54,9 +54,20 @@ func NewResourceSelectBuilder(
 }
 
 // Build builds sql query which depends on the applied options
-func (s *ResourceSelectBuilder) Build(ctx context.Context, query *qparser.Query) (Sqlizer, error) {
-	var selectFields []string
-	sb := new(SelectBuilder)
+func (s *ResourceSelectBuilder) Build(
+	ctx context.Context,
+	query *qparser.Query,
+	sb ...*SelectBuilder,
+) (*SelectBuilder, error) {
+	var (
+		selectFields []string
+		b            *SelectBuilder
+	)
+	if len(sb) > 0 {
+		b = sb[0]
+	} else {
+		b = new(SelectBuilder)
+	}
 	if fields, ok := query.Fields.FieldsByResource(s.resourceName); ok {
 		fields, err := s.translator(fields)
 		if err != nil {
@@ -71,15 +82,15 @@ func (s *ResourceSelectBuilder) Build(ctx context.Context, query *qparser.Query)
 			return nil, fmt.Errorf("field %q not allowed for selection criteria", field)
 		}
 	}
-	sb.Select(selectFields).From(s.resourceName)
+	b.Select(selectFields).From(s.resourceName)
 	conditions, err := s.retrieveFilterConditions(query)
 	if err != nil {
 		return nil, err
 	}
-	if len(conditions) == 0 {
-		sb.Where(alwaysTrue)
+	if len(conditions) == 0 && len(b.WhereParts) == 0 {
+		b.Where(alwaysTrue)
 	} else {
-		sb.Where(conditions...)
+		b.Where(conditions...)
 	}
 	sortList := make([]qparser.Sort, len(query.Sort))
 	sortFields := make([]string, len(query.Sort))
@@ -105,14 +116,14 @@ func (s *ResourceSelectBuilder) Build(ctx context.Context, query *qparser.Query)
 		sortList[i].FieldName = sortFields[i]
 	}
 	if len(sortList) > 0 {
-		sb.OrderBy(OrderBy(sortList))
+		b.OrderBy(OrderBy(sortList))
 	}
 	for _, extension := range s.extensions {
-		if err = extension(ctx, query, sb); err != nil {
+		if err = extension(ctx, query, b); err != nil {
 			return nil, err
 		}
 	}
-	return sb, nil
+	return b, nil
 }
 
 func (s *ResourceSelectBuilder) retrieveFilterConditions(query *qparser.Query) ([]Sqlizer, error) {

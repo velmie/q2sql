@@ -208,3 +208,14 @@ The Extension accesses * q2sql.SelectBuilder and can use it to modify the result
 		[1 2 3 4 5]
 	 */
 ```
+
+In order to apply custom conditions you may pass select builder to the resource select builder.
+
+```go
+    sb := new(q2sql.SelectBuilder)
+	sb.Where(&q2sql.Eq{"author", "Alan Turing"})
+    
+    _, err := builder.Build(context.Background(), query, sb)
+    ...
+    
+```
