@@ -87,9 +87,7 @@ func (s *ResourceSelectBuilder) Build(
 	if err != nil {
 		return nil, err
 	}
-	if len(conditions) == 0 && len(b.WhereParts) == 0 {
-		b.Where(alwaysTrue)
-	} else {
+	if len(conditions) > 0 {
 		b.Where(conditions...)
 	}
 	sortList := make([]qparser.Sort, len(query.Sort))

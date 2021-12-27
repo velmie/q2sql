@@ -8,8 +8,6 @@ import (
 	"github.com/velmie/qparser"
 )
 
-const alwaysTrue = RawSql("1 = 1")
-
 // Sqlizer return an SQL with the list of arguments
 type Sqlizer interface {
 	ToSql() (string, []interface{}, error)

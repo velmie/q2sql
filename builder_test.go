@@ -34,13 +34,13 @@ var resourceBuilderTests = []resourceBuilderTest{
 	{
 		title: "Default fields, no conditions",
 		query: "",
-		sql:   fmt.Sprintf("SELECT * FROM %s WHERE 1 = 1", resourceName),
+		sql:   fmt.Sprintf("SELECT * FROM %s", resourceName),
 		args:  []interface{}{},
 	},
 	{
 		title: "Specific fields, no conditions",
 		query: fmt.Sprintf("fields[%s]=%s,%s", resourceName, resourceFieldID, resourceFieldTitle),
-		sql:   fmt.Sprintf("SELECT %s, %s FROM %s WHERE 1 = 1", resourceFieldID, resourceFieldTitle, resourceName),
+		sql:   fmt.Sprintf("SELECT %s, %s FROM %s", resourceFieldID, resourceFieldTitle, resourceName),
 		args:  []interface{}{},
 	},
 	{
