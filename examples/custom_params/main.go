@@ -3,8 +3,9 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/velmie/qparser"
 	"log"
+
+	"github.com/velmie/qparser"
 
 	"github.com/velmie/q2sql"
 	"github.com/velmie/q2sql/condition"

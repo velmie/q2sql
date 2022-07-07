@@ -56,31 +56,52 @@ func LimitOffsetPagination(maxLimit, maxOffset int64) q2sql.Extension {
 // that sets limit and offset based on the corresponding fields of the given query.Page
 // where offset is a result of the expression limit * (number - 1)
 func LimitNumberPagination(maxLimit int64) q2sql.Extension {
+	return Pagination(
+		maxLimit,
+		func(query *qparser.Query) (limit uint64, number uint64, err error) {
+			page := query.Page
+			if page == nil {
+				return 0, 0, nil
+			}
+			if page.Limit == "" {
+				return 0, 0, nil
+			}
+			limit, err = strconv.ParseUint(page.Limit, 10, 64)
+			if err != nil {
+				return 0, 0, fmt.Errorf("page limit must be unsigned integer, got %q", page.Limit)
+			}
+			number, err = strconv.ParseUint(page.Number, 10, 64)
+			if err != nil {
+				return 0, 0, fmt.Errorf("page number must be unsigned integer, got %q", page.Number)
+			}
+			return limit, number, nil
+		})
+}
+
+// Pagination is the extension
+// that sets limit and offset based on the size and number values returned by the "sizeAndNumberGetter"
+// argument. Offset is a result of the expression size * (number - 1)
+func Pagination(
+	maxLimit int64,
+	sizeAndNumberGetter func(*qparser.Query) (size uint64, number uint64, err error),
+) q2sql.Extension {
 	return func(_ context.Context, query *qparser.Query, builder *q2sql.SelectBuilder) error {
-		page := query.Page
-		if page == nil {
-			return nil
-		}
-		if page.Limit == "" {
-			return nil
-		}
-		limit, err := strconv.ParseUint(page.Limit, 10, 32)
+		size, number, err := sizeAndNumberGetter(query)
 		if err != nil {
-			return fmt.Errorf("page limit must be unsigned integer, got %q", page.Limit)
+			return err
 		}
-		if maxLimit != Unlimited && int64(limit) > maxLimit {
+
+		if size == 0 {
+			return nil
+		}
+
+		if maxLimit != Unlimited && int64(size) > maxLimit {
 			return fmt.Errorf("page limit cannot be greater than %d", maxLimit)
 		}
-		builder.Limit(limit)
+		builder.Limit(size)
 
-		if page.Number != "" {
-			number, err := strconv.ParseUint(page.Number, 10, 32)
-			if err != nil {
-				return fmt.Errorf("page number must be unsigned integer, got %q", page.Number)
-			}
-			if number != 1 {
-				builder.Offset(limit * (number - 1))
-			}
+		if number > 1 {
+			builder.Offset(size * (number - 1))
 		}
 		return nil
 	}
