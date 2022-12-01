@@ -135,6 +135,32 @@ This option allows you to specify a list of fields that can be used for sorting 
 	)   
 ```
 
+#### AlwaysSelectFields - sets a list of fields that will be always included
+
+Specified fields will be included in SELECT regardless if they were requested by client or not
+
+```go
+	builder := q2sql.NewResourceSelectBuilder(
+		resourceName,
+		translator,
+		q2sql.AllowSelectFields(defaultFields),
+        q2sql.AlwaysSelectFields([]string{"status"}),
+	)
+```
+
+#### AlwaysSelectAllFields - selects all allowed or default fields
+
+All allowed select fields (or default if they were not specified) will be included in SELECT
+
+```go
+	builder := q2sql.NewResourceSelectBuilder(
+		resourceName,
+		translator,
+        q2sql.AllowSelectFields(defaultFields),
+        q2sql.AlwaysSelectAllFields(true),
+	)
+```
+
 #### Extend - this special option allows you to extend the functionality of the builder
 
 For example, the builder does not implement the pagination functionality. Different projects may have their own requirements

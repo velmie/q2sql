@@ -10,12 +10,13 @@ import (
 )
 
 type resourceBuilderTest struct {
-	title       string
-	query       string
-	sql         string
-	args        []interface{}
-	expectedErr bool
-	sb          func() *SelectBuilder
+	title             string
+	query             string
+	sql               string
+	args              []interface{}
+	expectedErr       bool
+	sb                func() *SelectBuilder
+	additionalOptions []ResourceSelectBuilderOption
 }
 
 const (
@@ -96,6 +97,24 @@ var resourceBuilderTests = []resourceBuilderTest{
 			return sb.Where(&RawSqlWithArgs{"id = ?", []interface{}{"1"}})
 		},
 	},
+	{
+		title: "Specific fields, specific always select field",
+		query: fmt.Sprintf("fields[%s]=%s,%s", resourceName, resourceFieldID, resourceFieldTitle),
+		sql:   fmt.Sprintf("SELECT %s, %s, %s FROM %s", resourceFieldID, resourceFieldTitle, resourceFieldBody, resourceName),
+		args:  []interface{}{},
+		additionalOptions: []ResourceSelectBuilderOption{
+			AlwaysSelectFields([]string{resourceFieldBody}),
+		},
+	},
+	{
+		title: "Specific fields, always select all fields",
+		query: fmt.Sprintf("fields[%s]=%s,%s", resourceName, resourceFieldID, resourceFieldTitle),
+		sql:   fmt.Sprintf("SELECT *, %s, %s, %s, %s FROM %s", resourceFieldID, resourceFieldTitle, resourceFieldBody, resourceFieldCreatedAt, resourceName),
+		args:  []interface{}{},
+		additionalOptions: []ResourceSelectBuilderOption{
+			AlwaysSelectAllFields(true),
+		},
+	},
 }
 
 func TestNewResourceSelectBuilder(t *testing.T) {
@@ -123,13 +142,15 @@ func TestNewResourceSelectBuilder(t *testing.T) {
 			}
 		},
 	}
-	translator := MapTranslator(map[string]string{
-		"id":        resourceFieldID,
-		"title":     resourceFieldTitle,
-		"body":      resourceFieldBody,
-		"createdAt": resourceFieldCreatedAt,
-		"updatedAt": resourceFieldUpdatedAt,
-	})
+	translator := MapTranslator(
+		map[string]string{
+			"id":        resourceFieldID,
+			"title":     resourceFieldTitle,
+			"body":      resourceFieldBody,
+			"createdAt": resourceFieldCreatedAt,
+			"updatedAt": resourceFieldUpdatedAt,
+		},
+	)
 	allowedConditions := AllowedConditions{
 		resourceFieldID:    []string{filterEq, filterAny},
 		resourceFieldTitle: []string{filterEq, filterContains},
@@ -138,23 +159,29 @@ func TestNewResourceSelectBuilder(t *testing.T) {
 	allowedSorting := []string{resourceFieldCreatedAt}
 	parser := NewDelimitedArgsParser(':', ',')
 
-	builder := NewResourceSelectBuilder(
-		resourceName,
-		translator,
-		AllowFiltering(allowedConditions, conditionFactory, parser),
-		AllowSortingByFields(allowedSorting),
-		WithDefaultFields([]string{"*"}),
-		AllowSelectFields([]string{
-			"*",
-			resourceFieldID,
-			resourceFieldTitle,
-			resourceFieldBody,
-			resourceFieldCreatedAt,
-		}),
-	)
-
 	ctx := context.Background()
 	for i, tt := range resourceBuilderTests {
+		builder := NewResourceSelectBuilder(
+			resourceName,
+			translator,
+			append(
+				[]ResourceSelectBuilderOption{
+					AllowFiltering(allowedConditions, conditionFactory, parser),
+					AllowSortingByFields(allowedSorting),
+					WithDefaultFields([]string{"*"}),
+					AllowSelectFields(
+						[]string{
+							"*",
+							resourceFieldID,
+							resourceFieldTitle,
+							resourceFieldBody,
+							resourceFieldCreatedAt,
+						},
+					),
+				},
+				tt.additionalOptions...,
+			)...,
+		)
 		meta := fmt.Sprintf("test %d\n%s:\n\n\t", i, tt.title)
 		query, err := qparser.ParseQuery(tt.query)
 		if err != nil {
@@ -187,5 +214,4 @@ func TestNewResourceSelectBuilder(t *testing.T) {
 			continue
 		}
 	}
-
 }

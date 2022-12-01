@@ -46,3 +46,20 @@ func Extend(extensions ...Extension) ResourceSelectBuilderOption {
 		b.extensions = append(b.extensions, extensions...)
 	}
 }
+
+// AlwaysSelectFields sets fields which that will always be included  in the SELECT
+// SQL statement regardless if specific fields are requested or not
+func AlwaysSelectFields(fields []string) ResourceSelectBuilderOption {
+	return func(b *ResourceSelectBuilder) {
+		b.alwaysSelectFields = fields
+	}
+}
+
+// AlwaysSelectAllFields will always include all allowed fields in the SELECT
+// SQL statement regardless if specific fields are requested or not
+// Overrides AlwaysSelectFields
+func AlwaysSelectAllFields(flag bool) ResourceSelectBuilderOption {
+	return func(b *ResourceSelectBuilder) {
+		b.alwaysSelectAllFields = flag
+	}
+}
