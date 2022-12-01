@@ -30,6 +30,7 @@ func AllowSelectFields(fields []string) ResourceSelectBuilderOption {
 			b.allowedSelectFields = make(map[string]struct{})
 		}
 		fillMapKeys(b.allowedSelectFields, fields)
+		b.allowedSelectFieldsSlc = append(b.allowedSelectFieldsSlc, fields...)
 	}
 }
 

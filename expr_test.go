@@ -93,8 +93,8 @@ var expressionTests = []expressionTest{
 	},
 	{
 		in: OrderBy{
-			{"fieldA", qparser.OrderDesc},
-			{"fieldB", qparser.OrderAsc},
+			{FieldName: "fieldA", Order: qparser.OrderDesc},
+			{FieldName: "fieldB", Order: qparser.OrderAsc},
 		},
 		out:  "fieldA DESC, fieldB ASC",
 		args: nil,

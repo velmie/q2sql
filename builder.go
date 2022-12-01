@@ -21,17 +21,18 @@ type AllowedConditions map[string][]string
 
 // ResourceSelectBuilder is default implementation of sql select query builder
 type ResourceSelectBuilder struct {
-	resourceName          string
-	defaultFields         []string
-	allowedConditions     AllowedConditions
-	allowedSelectFields   map[string]struct{}
-	allowedSortFields     []string
-	translator            Translator
-	parser                FilterExpressionParser
-	conditions            ConditionFactory
-	extensions            []Extension
-	alwaysSelectFields    []string
-	alwaysSelectAllFields bool
+	resourceName           string
+	defaultFields          []string
+	allowedConditions      AllowedConditions
+	allowedSelectFields    map[string]struct{}
+	allowedSelectFieldsSlc []string
+	allowedSortFields      []string
+	translator             Translator
+	parser                 FilterExpressionParser
+	conditions             ConditionFactory
+	extensions             []Extension
+	alwaysSelectFields     []string
+	alwaysSelectAllFields  bool
 }
 
 // NewResourceSelectBuilder is ResourceSelectBuilder constructor
@@ -51,7 +52,9 @@ func NewResourceSelectBuilder(
 	if b.allowedSelectFields == nil {
 		b.allowedSelectFields = make(map[string]struct{})
 		fillMapKeys(b.allowedSelectFields, b.defaultFields)
+		b.allowedSelectFieldsSlc = b.defaultFields
 	}
+	b.allowedSelectFieldsSlc = moveWildcardInFront(removeDuplicateStrings(b.allowedSelectFieldsSlc))
 	return b
 }
 
@@ -71,7 +74,7 @@ func (s *ResourceSelectBuilder) Build(
 		b = new(SelectBuilder)
 	}
 	if s.alwaysSelectAllFields {
-		selectFields = getFieldMapKeys(s.allowedSelectFields)
+		selectFields = s.allowedSelectFieldsSlc
 	} else {
 		if fields, ok := query.Fields.FieldsByResource(s.resourceName); ok {
 			fields, err := s.translator(fields)
@@ -187,25 +190,23 @@ func fillMapKeys(m map[string]struct{}, keys []string) {
 	}
 }
 
-func getFieldMapKeys(m map[string]struct{}) []string {
-	keys := make([]string, 0)
-
-	for k := range m {
-		if k == "*" {
-			keys = append([]string{k}, keys...)
-		} else {
-			keys = append(keys, k)
+func moveWildcardInFront(s []string) []string {
+	for i, item := range s {
+		if item == "*" {
+			result := append([]string{"*"}, s[:i]...)
+			result = append(result, s[i+1:]...)
+			return result
 		}
 	}
-	return keys
+	return s
 }
 
 func removeDuplicateStrings(s []string) []string {
-	allKeys := make(map[string]bool)
-	list := []string{}
+	allKeys := make(map[string]struct{})
+	var list []string
 	for _, item := range s {
 		if _, value := allKeys[item]; !value {
-			allKeys[item] = true
+			allKeys[item] = struct{}{}
 			list = append(list, item)
 		}
 	}

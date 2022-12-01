@@ -115,6 +115,21 @@ var resourceBuilderTests = []resourceBuilderTest{
 			AlwaysSelectAllFields(true),
 		},
 	},
+	{
+		title: "Second AllowSelectFields specification with duplicate *, always select all fields",
+		query: fmt.Sprintf("fields[%s]=%s,%s", resourceName, resourceFieldID, resourceFieldTitle),
+		sql:   fmt.Sprintf("SELECT *, %s, %s, %s, %s, %s FROM %s", resourceFieldID, resourceFieldTitle, resourceFieldBody, resourceFieldCreatedAt, resourceFieldUpdatedAt, resourceName),
+		args:  []interface{}{},
+		additionalOptions: []ResourceSelectBuilderOption{
+			AllowSelectFields(
+				[]string{
+					"*",
+					resourceFieldUpdatedAt,
+				},
+			),
+			AlwaysSelectAllFields(true),
+		},
+	},
 }
 
 func TestNewResourceSelectBuilder(t *testing.T) {
