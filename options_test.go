@@ -43,10 +43,41 @@ var optionsTests = []optionsTest{
 				"y2": {},
 				"y3": {},
 			},
+			allowedSelectFieldsSlc: []string{"x1", "x2", "x3", "y1", "y2", "y3"},
 		},
 		options: []ResourceSelectBuilderOption{
 			AllowSelectFields([]string{"x1", "x2", "x3"}),
 			AllowSelectFields([]string{"y1", "y2", "y3"}),
+		},
+	},
+	{
+		b: &ResourceSelectBuilder{
+			allowedSelectFields: map[string]struct{}{
+				"x1": {},
+				"x2": {},
+				"x3": {},
+			},
+			allowedSelectFieldsSlc: []string{"x1", "x2", "x3"},
+			alwaysSelectFields:     []string{"x1"},
+		},
+		options: []ResourceSelectBuilderOption{
+			AllowSelectFields([]string{"x1", "x2", "x3"}),
+			AlwaysSelectFields([]string{"x1"}),
+		},
+	},
+	{
+		b: &ResourceSelectBuilder{
+			allowedSelectFields: map[string]struct{}{
+				"x1": {},
+				"x2": {},
+				"x3": {},
+			},
+			allowedSelectFieldsSlc: []string{"x1", "x2", "x3"},
+			alwaysSelectAllFields:  true,
+		},
+		options: []ResourceSelectBuilderOption{
+			AllowSelectFields([]string{"x1", "x2", "x3"}),
+			AlwaysSelectAllFields(true),
 		},
 	},
 }

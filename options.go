@@ -30,6 +30,7 @@ func AllowSelectFields(fields []string) ResourceSelectBuilderOption {
 			b.allowedSelectFields = make(map[string]struct{})
 		}
 		fillMapKeys(b.allowedSelectFields, fields)
+		b.allowedSelectFieldsSlc = append(b.allowedSelectFieldsSlc, fields...)
 	}
 }
 
@@ -44,5 +45,22 @@ func AllowSortingByFields(fields []string) ResourceSelectBuilderOption {
 func Extend(extensions ...Extension) ResourceSelectBuilderOption {
 	return func(b *ResourceSelectBuilder) {
 		b.extensions = append(b.extensions, extensions...)
+	}
+}
+
+// AlwaysSelectFields sets fields which that will always be included  in the SELECT
+// SQL statement regardless if specific fields are requested or not
+func AlwaysSelectFields(fields []string) ResourceSelectBuilderOption {
+	return func(b *ResourceSelectBuilder) {
+		b.alwaysSelectFields = fields
+	}
+}
+
+// AlwaysSelectAllFields will always include all allowed fields in the SELECT
+// SQL statement regardless if specific fields are requested or not
+// Overrides AlwaysSelectFields
+func AlwaysSelectAllFields(flag bool) ResourceSelectBuilderOption {
+	return func(b *ResourceSelectBuilder) {
+		b.alwaysSelectAllFields = flag
 	}
 }

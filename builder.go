@@ -21,15 +21,18 @@ type AllowedConditions map[string][]string
 
 // ResourceSelectBuilder is default implementation of sql select query builder
 type ResourceSelectBuilder struct {
-	resourceName        string
-	defaultFields       []string
-	allowedConditions   AllowedConditions
-	allowedSelectFields map[string]struct{}
-	allowedSortFields   []string
-	translator          Translator
-	parser              FilterExpressionParser
-	conditions          ConditionFactory
-	extensions          []Extension
+	resourceName           string
+	defaultFields          []string
+	allowedConditions      AllowedConditions
+	allowedSelectFields    map[string]struct{}
+	allowedSelectFieldsSlc []string
+	allowedSortFields      []string
+	translator             Translator
+	parser                 FilterExpressionParser
+	conditions             ConditionFactory
+	extensions             []Extension
+	alwaysSelectFields     []string
+	alwaysSelectAllFields  bool
 }
 
 // NewResourceSelectBuilder is ResourceSelectBuilder constructor
@@ -49,7 +52,9 @@ func NewResourceSelectBuilder(
 	if b.allowedSelectFields == nil {
 		b.allowedSelectFields = make(map[string]struct{})
 		fillMapKeys(b.allowedSelectFields, b.defaultFields)
+		b.allowedSelectFieldsSlc = b.defaultFields
 	}
+	b.allowedSelectFieldsSlc = removeDuplicateStrings(b.allowedSelectFieldsSlc)
 	return b
 }
 
@@ -68,14 +73,20 @@ func (s *ResourceSelectBuilder) Build(
 	} else {
 		b = new(SelectBuilder)
 	}
-	if fields, ok := query.Fields.FieldsByResource(s.resourceName); ok {
-		fields, err := s.translator(fields)
-		if err != nil {
-			return nil, err
-		}
-		selectFields = fields
+	if s.alwaysSelectAllFields {
+		selectFields = s.allowedSelectFieldsSlc
 	} else {
-		selectFields = s.defaultFields
+		if fields, ok := query.Fields.FieldsByResource(s.resourceName); ok {
+			fields, err := s.translator(fields)
+			if err != nil {
+				return nil, err
+			}
+			selectFields = fields
+		} else {
+			selectFields = s.defaultFields
+		}
+		selectFields = append(selectFields, s.alwaysSelectFields...)
+		selectFields = removeDuplicateStrings(selectFields)
 	}
 	for _, field := range selectFields {
 		if _, ok := s.allowedSelectFields[field]; !ok {
@@ -177,4 +188,16 @@ func fillMapKeys(m map[string]struct{}, keys []string) {
 	for _, key := range keys {
 		m[key] = struct{}{}
 	}
+}
+
+func removeDuplicateStrings(s []string) []string {
+	allKeys := make(map[string]struct{})
+	var list []string
+	for _, item := range s {
+		if _, value := allKeys[item]; !value {
+			allKeys[item] = struct{}{}
+			list = append(list, item)
+		}
+	}
+	return list
 }
