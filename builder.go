@@ -54,7 +54,7 @@ func NewResourceSelectBuilder(
 		fillMapKeys(b.allowedSelectFields, b.defaultFields)
 		b.allowedSelectFieldsSlc = b.defaultFields
 	}
-	b.allowedSelectFieldsSlc = moveWildcardInFront(removeDuplicateStrings(b.allowedSelectFieldsSlc))
+	b.allowedSelectFieldsSlc = removeDuplicateStrings(b.allowedSelectFieldsSlc)
 	return b
 }
 
@@ -188,17 +188,6 @@ func fillMapKeys(m map[string]struct{}, keys []string) {
 	for _, key := range keys {
 		m[key] = struct{}{}
 	}
-}
-
-func moveWildcardInFront(s []string) []string {
-	for i, item := range s {
-		if item == "*" {
-			result := append([]string{"*"}, s[:i]...)
-			result = append(result, s[i+1:]...)
-			return result
-		}
-	}
-	return s
 }
 
 func removeDuplicateStrings(s []string) []string {
