@@ -77,11 +77,11 @@ func (s *ResourceSelectBuilder) Build(
 		selectFields = s.allowedSelectFieldsSlc
 	} else {
 		if fields, ok := query.Fields.FieldsByResource(s.resourceName); ok {
-			fields, err := s.translator(fields)
+			f, err := s.translator(fields)
 			if err != nil {
 				return nil, err
 			}
-			selectFields = fields
+			selectFields = f
 		} else {
 			selectFields = s.defaultFields
 		}
@@ -128,7 +128,7 @@ func (s *ResourceSelectBuilder) Build(
 		b.OrderBy(OrderBy(sortList))
 	}
 	for _, extension := range s.extensions {
-		if err = extension(ctx, query, b); err != nil {
+		if err := extension(ctx, query, b); err != nil {
 			return nil, err
 		}
 	}

@@ -21,6 +21,8 @@ type LimitOffsetPaginationParams struct {
 
 // LimitOffsetPagination is the extension
 // that sets limit and offset based on the corresponding fields of the given query.Page
+//
+//nolint:gocognit // skip because it is covered by tests
 func LimitOffsetPagination(maxLimit, maxOffset int64) q2sql.Extension {
 	return func(_ context.Context, query *qparser.Query, builder *q2sql.SelectBuilder) error {
 		if page := query.Page; page != nil {

@@ -30,6 +30,5 @@ func TestConditionMap(t *testing.T) {
 			t.Errorf("ConditionMap.CreateCondition(%q) returned unexpected error %s", test.name, err)
 			continue
 		}
-
 	}
 }
