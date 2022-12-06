@@ -45,7 +45,7 @@ func main() {
 		log.Fatal("failed to build query", err)
 	}
 
-	sqlStr, args, err := sqlizer.ToSql()
+	sqlStr, args, err := sqlizer.ToSQL()
 	if err != nil {
 		log.Fatal("failed to build SQL query", err)
 	}

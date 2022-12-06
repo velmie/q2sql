@@ -32,7 +32,7 @@ func (s *SelectBuilder) Select(columns []string) *SelectBuilder {
 }
 
 func (s *SelectBuilder) From(from string) *SelectBuilder {
-	s.FromPart = RawSql(from)
+	s.FromPart = RawSQL(from)
 	return s
 }
 
@@ -71,8 +71,7 @@ func (s *SelectBuilder) Offset(offset uint64) *SelectBuilder {
 	return s
 }
 
-//nolint:stylecheck // skip because this is an Interface implementation
-func (s *SelectBuilder) ToSql() (sqlStr string, args []interface{}, err error) {
+func (s *SelectBuilder) ToSQL() (sqlStr string, args []interface{}, err error) {
 	sql := new(bytes.Buffer)
 	args = make([]interface{}, 0)
 	if len(s.Columns) == 0 {

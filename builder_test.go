@@ -94,7 +94,7 @@ var resourceBuilderTests = []resourceBuilderTest{
 		args:  []interface{}{"1"},
 		sb: func() *SelectBuilder {
 			sb := new(SelectBuilder)
-			return sb.Where(&RawSqlWithArgs{"id = ?", []interface{}{"1"}})
+			return sb.Where(&RawSQLWithArgs{"id = ?", []interface{}{"1"}})
 		},
 	},
 	{
@@ -148,7 +148,7 @@ func TestNewResourceSelectBuilder(t *testing.T) {
 		},
 		filterContains: func(field string, args ...interface{}) Sqlizer {
 			if len(args) == 0 {
-				return RawSql("")
+				return RawSQL("")
 			}
 			val := "%" + args[0].(string) + "%"
 			return &Like{
@@ -213,7 +213,7 @@ func TestNewResourceSelectBuilder(t *testing.T) {
 		} else if err != nil {
 			continue
 		}
-		sql, args, err := sqlizer.ToSql()
+		sql, args, err := sqlizer.ToSQL()
 		if !tt.expectedErr && err != nil {
 			t.Errorf("%sunexpected error %s", meta, err)
 			continue

@@ -4,7 +4,7 @@ import (
 	"github.com/velmie/q2sql"
 )
 
-const nilSqlizer = q2sql.RawSql("")
+const nilSqlizer = q2sql.RawSQL("")
 
 // Eq - equal to
 func Eq(field string, args ...interface{}) q2sql.Sqlizer {

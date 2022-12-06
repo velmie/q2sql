@@ -108,5 +108,8 @@ issues:
         - gocyclo
         - lll
         - maintidx
+    - path: expr\.go
+      linters:
+        - gocritic
 run:
   timeout: 5m
