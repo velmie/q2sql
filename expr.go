@@ -10,7 +10,7 @@ import (
 
 // Sqlizer return an SQL with the list of arguments
 type Sqlizer interface {
-	ToSql() (string, []interface{}, error)
+	ToSQL() (string, []interface{}, error)
 }
 
 // Eq - Equality: field = value
@@ -19,7 +19,7 @@ type Eq struct {
 	Value interface{}
 }
 
-func (eq *Eq) ToSql() (string, []interface{}, error) {
+func (eq *Eq) ToSQL() (string, []interface{}, error) {
 	return eq.Field + " = ?", []interface{}{eq.Value}, nil
 }
 
@@ -29,7 +29,7 @@ type Neq struct {
 	Value interface{}
 }
 
-func (neq *Neq) ToSql() (string, []interface{}, error) {
+func (neq *Neq) ToSQL() (string, []interface{}, error) {
 	return neq.Field + " != ?", []interface{}{neq.Value}, nil
 }
 
@@ -39,7 +39,7 @@ type Lt struct {
 	Value interface{}
 }
 
-func (lt *Lt) ToSql() (string, []interface{}, error) {
+func (lt *Lt) ToSQL() (string, []interface{}, error) {
 	return lt.Field + " < ?", []interface{}{lt.Value}, nil
 }
 
@@ -49,7 +49,7 @@ type Le struct {
 	Value interface{}
 }
 
-func (le *Le) ToSql() (string, []interface{}, error) {
+func (le *Le) ToSQL() (string, []interface{}, error) {
 	return le.Field + " <= ?", []interface{}{le.Value}, nil
 }
 
@@ -59,7 +59,7 @@ type Gt struct {
 	Value interface{}
 }
 
-func (gt *Gt) ToSql() (string, []interface{}, error) {
+func (gt *Gt) ToSQL() (string, []interface{}, error) {
 	return gt.Field + " > ?", []interface{}{gt.Value}, nil
 }
 
@@ -69,7 +69,7 @@ type Ge struct {
 	Value interface{}
 }
 
-func (ge *Ge) ToSql() (string, []interface{}, error) {
+func (ge *Ge) ToSQL() (string, []interface{}, error) {
 	return ge.Field + " >= ?", []interface{}{ge.Value}, nil
 }
 
@@ -79,7 +79,7 @@ type In struct {
 	Values []interface{}
 }
 
-func (in *In) ToSql() (string, []interface{}, error) {
+func (in *In) ToSQL() (string, []interface{}, error) {
 	return in.Field + " IN (?" + strings.Repeat(",?", len(in.Values)-1) + ")", in.Values, nil
 }
 
@@ -89,28 +89,28 @@ type Like struct {
 	Value interface{}
 }
 
-func (l *Like) ToSql() (string, []interface{}, error) {
+func (l *Like) ToSQL() (string, []interface{}, error) {
 	return l.Field + " LIKE ?", []interface{}{l.Value}, nil
 }
 
 // IsNull - Equal to null: field is null
 type IsNull string
 
-func (i IsNull) ToSql() (string, []interface{}, error) {
+func (i IsNull) ToSQL() (string, []interface{}, error) {
 	return string(i) + " IS NULL", nil, nil
 }
 
 // IsNotNull - Not equal to null: field is not null
 type IsNotNull string
 
-func (i IsNotNull) ToSql() (string, []interface{}, error) {
+func (i IsNotNull) ToSQL() (string, []interface{}, error) {
 	return string(i) + " IS NOT NULL", nil, nil
 }
 
 // Or connects multiple expressions with the "OR" statement
 type Or []Sqlizer
 
-func (or Or) ToSql() (sql string, args []interface{}, err error) {
+func (or Or) ToSQL() (sql string, args []interface{}, err error) {
 	if len(or) == 0 {
 		return
 	}
@@ -120,7 +120,7 @@ func (or Or) ToSql() (sql string, args []interface{}, err error) {
 	if group {
 		expr.WriteByte('(')
 	}
-	args, err = appendToSql(or, expr, " OR ", args)
+	args, err = appendToSQL(or, expr, " OR ", args)
 	if err != nil {
 		return
 	}
@@ -131,13 +131,13 @@ func (or Or) ToSql() (sql string, args []interface{}, err error) {
 	return
 }
 
-// RawSqlWithArgs is a free form sql with possible arguments
-type RawSqlWithArgs struct {
+// RawSQLWithArgs is a free form sql with possible arguments
+type RawSQLWithArgs struct {
 	SQL  string
 	Args []interface{}
 }
 
-func (r *RawSqlWithArgs) ToSql() (string, []interface{}, error) {
+func (r *RawSQLWithArgs) ToSQL() (string, []interface{}, error) {
 	return r.SQL, r.Args, nil
 }
 
@@ -152,7 +152,7 @@ func (s Columns) String() string {
 	return columns
 }
 
-func (s Columns) ToSql() (string, []interface{}, error) {
+func (s Columns) ToSQL() (string, []interface{}, error) {
 	return s.String(), nil, nil
 }
 
@@ -164,43 +164,46 @@ func (s OrderBy) String() string {
 	if len(s) == 0 {
 		return ""
 	}
-	var order string
+
+	var sb strings.Builder
 	for i := 0; i < len(s); i++ {
 		if i != 0 {
-			order = order + ", "
+			sb.WriteString(", ")
 		}
-		order += s[i].FieldName + " " + s[i].Order.String()
+		sb.WriteString(s[i].FieldName)
+		sb.WriteString(" ")
+		sb.WriteString(s[i].Order.String())
 	}
-	return order
+
+	return sb.String()
 }
 
-func (s OrderBy) ToSql() (string, []interface{}, error) {
+func (s OrderBy) ToSQL() (string, []interface{}, error) {
 	return s.String(), nil, nil
 }
 
-// RawSql is a raw SQL string without arguments
-type RawSql string
+// RawSQL is a raw SQL string without arguments
+type RawSQL string
 
-func (s RawSql) ToSql() (string, []interface{}, error) {
+func (s RawSQL) ToSQL() (string, []interface{}, error) {
 	return string(s), nil, nil
 }
 
-func appendToSql(parts []Sqlizer, w io.Writer, sep string, args []interface{}) ([]interface{}, error) {
+func appendToSQL(parts []Sqlizer, w io.Writer, sep string, args []interface{}) ([]interface{}, error) {
 	for i, p := range parts {
-		partSql, partArgs, err := p.ToSql()
+		partSQL, partArgs, err := p.ToSQL()
 		if err != nil {
 			return nil, err
 		}
-		if partSql == "" {
+		if partSQL == "" {
 			continue
 		}
 		if i > 0 {
-			_, err := io.WriteString(w, sep)
-			if err != nil {
-				return nil, err
+			if _, inErr := io.WriteString(w, sep); inErr != nil {
+				return nil, inErr
 			}
 		}
-		_, err = io.WriteString(w, partSql)
+		_, err = io.WriteString(w, partSQL)
 		if err != nil {
 			return nil, err
 		}

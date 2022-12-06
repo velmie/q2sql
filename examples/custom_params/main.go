@@ -53,7 +53,7 @@ func main() {
 	// or rewrite some parts, for example the line below clears sorting
 	sb.OrderByParts = nil
 
-	sqlStr, args, err := sb.ToSql()
+	sqlStr, args, err := sb.ToSQL()
 	if err != nil {
 		log.Fatal("failed to build SQL query", err)
 	}

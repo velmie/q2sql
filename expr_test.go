@@ -105,17 +105,17 @@ var expressionTests = []expressionTest{
 		args: nil,
 	},
 	{
-		in:   RawSql("SELECT 1"),
+		in:   RawSQL("SELECT 1"),
 		out:  "SELECT 1",
 		args: nil,
 	},
 	{
-		in:   &RawSqlWithArgs{"id = ? OR id = ?", []interface{}{1, 2}},
+		in:   &RawSQLWithArgs{"id = ? OR id = ?", []interface{}{1, 2}},
 		out:  "id = ? OR id = ?",
 		args: []interface{}{1, 2},
 	},
 	{
-		in:   Or{&RawSqlWithArgs{"field = ?", []interface{}{"value"}}, RawSql("field = 42")},
+		in:   Or{&RawSQLWithArgs{"field = ?", []interface{}{"value"}}, RawSQL("field = 42")},
 		out:  "(field = ? OR field = 42)",
 		args: []interface{}{"value"},
 	},
@@ -125,7 +125,7 @@ var expressionTests = []expressionTest{
 		args: nil,
 	},
 	{
-		in:   Or{RawSql("field = value")},
+		in:   Or{RawSQL("field = value")},
 		out:  "field = value",
 		args: []interface{}{},
 	},
@@ -134,7 +134,7 @@ var expressionTests = []expressionTest{
 func TestExpressions(t *testing.T) {
 	for i, tt := range expressionTests {
 		meta := fmt.Sprintf("test %d (%s)", i, reflect.TypeOf(tt.in))
-		expr, args, err := tt.in.ToSql()
+		expr, args, err := tt.in.ToSQL()
 		if err != nil {
 			t.Errorf("%s: expr unexpected error: %s", meta, err)
 			continue

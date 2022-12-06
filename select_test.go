@@ -39,12 +39,12 @@ var selectBuilderTests = []selectBuilderTest{
 		b: new(SelectBuilder).
 			Select([]string{"*"}).
 			From("tbl").
-			Join(RawSql("JOIN tbl2 ON tbl2.id = tbl1.some_id")).
-			Where(RawSql("field1 = value")).
-			Where(&RawSqlWithArgs{"field2 = ?", []interface{}{"value2"}}).
+			Join(RawSQL("JOIN tbl2 ON tbl2.id = tbl1.some_id")).
+			Where(RawSQL("field1 = value")).
+			Where(&RawSQLWithArgs{"field2 = ?", []interface{}{"value2"}}).
 			GroupBy("field").
-			Having(RawSql("field = value")).
-			OrderBy(RawSql("created_at DESC")).
+			Having(RawSQL("field = value")).
+			OrderBy(RawSQL("created_at DESC")).
 			Limit(10).
 			Offset(20),
 		query: "SELECT * FROM tbl JOIN tbl2 ON tbl2.id = tbl1.some_id WHERE field1 = value AND field2 = ? GROUP BY field HAVING field = value ORDER BY created_at DESC LIMIT 10 OFFSET 20",
@@ -56,7 +56,7 @@ var selectBuilderTests = []selectBuilderTest{
 func TestSelectBuilder(t *testing.T) {
 	for i, tt := range selectBuilderTests {
 		meta := fmt.Sprintf("test %d", i)
-		sql, args, err := tt.b.ToSql()
+		sql, args, err := tt.b.ToSQL()
 		if err != nil && tt.err == false {
 			t.Errorf("%s: SelectBuilder.ToSql() returned unexpected error: %s", meta, err)
 			continue

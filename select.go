@@ -32,7 +32,7 @@ func (s *SelectBuilder) Select(columns []string) *SelectBuilder {
 }
 
 func (s *SelectBuilder) From(from string) *SelectBuilder {
-	s.FromPart = RawSql(from)
+	s.FromPart = RawSQL(from)
 	return s
 }
 
@@ -71,7 +71,7 @@ func (s *SelectBuilder) Offset(offset uint64) *SelectBuilder {
 	return s
 }
 
-func (s *SelectBuilder) ToSql() (sqlStr string, args []interface{}, err error) {
+func (s *SelectBuilder) ToSQL() (sqlStr string, args []interface{}, err error) {
 	sql := new(bytes.Buffer)
 	args = make([]interface{}, 0)
 	if len(s.Columns) == 0 {
@@ -79,14 +79,14 @@ func (s *SelectBuilder) ToSql() (sqlStr string, args []interface{}, err error) {
 		return
 	}
 	sql.WriteString("SELECT ")
-	args, err = appendToSql(s.Columns, sql, ",", args)
+	args, err = appendToSQL(s.Columns, sql, ",", args)
 	if err != nil {
 		return "", nil, err
 	}
 
 	if s.FromPart != nil {
 		sql.WriteString(" FROM ")
-		args, err = appendToSql([]Sqlizer{s.FromPart}, sql, "", args)
+		args, err = appendToSQL([]Sqlizer{s.FromPart}, sql, "", args)
 		if err != nil {
 			return
 		}
@@ -94,7 +94,7 @@ func (s *SelectBuilder) ToSql() (sqlStr string, args []interface{}, err error) {
 
 	if len(s.Joins) > 0 {
 		sql.WriteString(" ")
-		args, err = appendToSql(s.Joins, sql, " ", args)
+		args, err = appendToSQL(s.Joins, sql, " ", args)
 		if err != nil {
 			return
 		}
@@ -102,7 +102,7 @@ func (s *SelectBuilder) ToSql() (sqlStr string, args []interface{}, err error) {
 
 	if len(s.WhereParts) > 0 {
 		sql.WriteString(" WHERE ")
-		args, err = appendToSql(s.WhereParts, sql, " AND ", args)
+		args, err = appendToSQL(s.WhereParts, sql, " AND ", args)
 		if err != nil {
 			return
 		}
@@ -115,7 +115,7 @@ func (s *SelectBuilder) ToSql() (sqlStr string, args []interface{}, err error) {
 
 	if len(s.HavingParts) > 0 {
 		sql.WriteString(" HAVING ")
-		args, err = appendToSql(s.HavingParts, sql, " AND ", args)
+		args, err = appendToSQL(s.HavingParts, sql, " AND ", args)
 		if err != nil {
 			return
 		}
@@ -123,7 +123,7 @@ func (s *SelectBuilder) ToSql() (sqlStr string, args []interface{}, err error) {
 
 	if len(s.OrderByParts) > 0 {
 		sql.WriteString(" ORDER BY ")
-		args, err = appendToSql(s.OrderByParts, sql, ", ", args)
+		args, err = appendToSQL(s.OrderByParts, sql, ", ", args)
 		if err != nil {
 			return
 		}
@@ -139,5 +139,6 @@ func (s *SelectBuilder) ToSql() (sqlStr string, args []interface{}, err error) {
 		sql.WriteString(s.OffsetPart)
 	}
 	sqlStr = sql.String()
-	return
+
+	return sqlStr, args, err
 }
