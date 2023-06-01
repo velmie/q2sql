@@ -134,27 +134,27 @@ var resourceBuilderTests = []resourceBuilderTest{
 
 func TestNewResourceSelectBuilder(t *testing.T) {
 	conditionFactory := ConditionMap{
-		filterEq: func(field string, args ...interface{}) Sqlizer {
+		filterEq: func(field string, args ...interface{}) (Sqlizer, error) {
 			return &Eq{
 				Field: field,
 				Value: args[0],
-			}
+			}, nil
 		},
-		filterAny: func(field string, args ...interface{}) Sqlizer {
+		filterAny: func(field string, args ...interface{}) (Sqlizer, error) {
 			return &In{
 				Field:  field,
 				Values: args,
-			}
+			}, nil
 		},
-		filterContains: func(field string, args ...interface{}) Sqlizer {
+		filterContains: func(field string, args ...interface{}) (Sqlizer, error) {
 			if len(args) == 0 {
-				return RawSQL("")
+				return RawSQL(""), nil
 			}
 			val := "%" + args[0].(string) + "%"
 			return &Like{
 				Field: field,
 				Value: val,
-			}
+			}, nil
 		},
 	}
 	translator := MapTranslator(

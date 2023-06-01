@@ -171,7 +171,13 @@ func (s *ResourceSelectBuilder) retrieveFilterConditions(query *qparser.Query) (
 		if err != nil {
 			return nil, err
 		}
-		conditions = append(conditions, condition(f[0], toInterfaceSlice(args)...))
+
+		cond, err := condition(f[0], toInterfaceSlice(args)...)
+		if err != nil {
+			return nil, err
+		}
+
+		conditions = append(conditions, cond)
 	}
 	return conditions, nil
 }

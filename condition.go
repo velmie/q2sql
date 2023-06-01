@@ -4,7 +4,7 @@ const ErrUndefinedCondition = Error("condition is not defined")
 
 // Condition returns wrapped SQL representation which describes certain condition
 // and a list of the condition arguments
-type Condition func(field string, args ...interface{}) Sqlizer
+type Condition func(field string, args ...interface{}) (Sqlizer, error)
 
 // ConditionFactory creates specific conditions by the name
 type ConditionFactory interface {

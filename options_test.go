@@ -116,8 +116,8 @@ func TestAllowFiltering(t *testing.T) {
 	b := new(ResourceSelectBuilder)
 	const conditionName = "c1"
 	conditions := ConditionMap{
-		conditionName: func(field string, args ...interface{}) Sqlizer {
-			return nil
+		conditionName: func(field string, args ...interface{}) (Sqlizer, error) {
+			return nil, nil //nolint:nilnil // function is just testing
 		},
 	}
 	allowedCondition := AllowedConditions{
