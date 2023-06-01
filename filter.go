@@ -1,6 +1,9 @@
 package q2sql
 
-import "strings"
+import (
+	"fmt"
+	"strings"
+)
 
 const (
 	mainDelim = ':'
@@ -48,6 +51,9 @@ func (d *DelimitedArgsParser) ParseFilterExpression(expr string) (name string, a
 	}
 	name, expr = expr[:i], expr[i+1:]
 	if expr == "" {
+		if name != "notnull" && name != "null" {
+			return "", nil, fmt.Errorf("for filter %s value must be specified", name)
+		}
 		return name, nil, nil
 	}
 	return name, strings.Split(expr, d.argsDelim), nil

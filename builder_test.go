@@ -78,6 +78,11 @@ var resourceBuilderTests = []resourceBuilderTest{
 		expectedErr: true,
 	},
 	{
+		title:       "Filter is present but value not specified",
+		query:       fmt.Sprintf("filter[%s]=%s:", resourceFieldTitle, filterEq),
+		expectedErr: true,
+	},
+	{
 		title:       "Not allowed sorting",
 		query:       "sort=id",
 		expectedErr: true,
