@@ -51,6 +51,16 @@ var selectBuilderTests = []selectBuilderTest{
 		args:  []interface{}{"value2"},
 		err:   false,
 	},
+	{
+		b: new(SelectBuilder).
+			Select([]string{"first_name", "last_name"}).
+			Distinct().
+			From("users").
+			Where(&Eq{"id", 1}),
+		query: "SELECT DISTINCT first_name, last_name FROM users WHERE id = ?",
+		args:  []interface{}{1},
+		err:   false,
+	},
 }
 
 func TestSelectBuilder(t *testing.T) {

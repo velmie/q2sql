@@ -12,6 +12,7 @@ import (
 // thanks to the project authors
 
 type SelectBuilder struct {
+	IsDistinct   bool
 	Columns      []Sqlizer
 	FromPart     Sqlizer
 	Joins        []Sqlizer
@@ -71,6 +72,11 @@ func (s *SelectBuilder) Offset(offset uint64) *SelectBuilder {
 	return s
 }
 
+func (s *SelectBuilder) Distinct() *SelectBuilder {
+	s.IsDistinct = true
+	return s
+}
+
 func (s *SelectBuilder) ToSQL() (sqlStr string, args []interface{}, err error) {
 	sql := new(bytes.Buffer)
 	args = make([]interface{}, 0)
@@ -78,7 +84,12 @@ func (s *SelectBuilder) ToSQL() (sqlStr string, args []interface{}, err error) {
 		err = errors.New("select must have at least one column")
 		return
 	}
+
 	sql.WriteString("SELECT ")
+	if s.IsDistinct {
+		sql.WriteString("DISTINCT ")
+	}
+
 	args, err = appendToSQL(s.Columns, sql, ",", args)
 	if err != nil {
 		return "", nil, err
