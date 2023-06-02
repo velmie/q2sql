@@ -287,7 +287,12 @@ var conditionTests = []conditionTest{
 
 func TestConditions(t *testing.T) {
 	for _, tt := range conditionTests {
-		sqlizer := tt.condition(tt.field, tt.args...)
+		sqlizer, err := tt.condition(tt.field, tt.args...)
+		if err != nil {
+			t.Errorf("%s field condition has raised error: %s", tt.field, err)
+			continue
+		}
+
 		expectedType, gotType := reflect.TypeOf(tt.expected), reflect.TypeOf(sqlizer)
 		if expectedType != gotType {
 			t.Errorf("%s condition returned unexpected type: %s", tt.name, gotType)
@@ -295,32 +300,6 @@ func TestConditions(t *testing.T) {
 		}
 		if tt.test != nil {
 			tt.test(t, sqlizer, tt.field, tt.args)
-		}
-	}
-}
-
-var nilSqlizerConditions = q2sql.ConditionMap{
-	"Eq":         Eq,
-	"In":         In,
-	"Neq":        Neq,
-	"Lt":         Lt,
-	"Le":         Le,
-	"Gt":         Gt,
-	"Ge":         Ge,
-	"StartsWith": StartsWith,
-	"EndsWith":   EndsWith,
-	"Contains":   Contains,
-	"Like":       Like,
-}
-
-func TestReturnNilSqlizerIfNoArgs(t *testing.T) {
-	const field = "field"
-	nilSqlizerType := reflect.TypeOf(nilSqlizer)
-	for name, c := range nilSqlizerConditions {
-		sqlizerType := reflect.TypeOf(c(field))
-		if sqlizerType != nilSqlizerType {
-			t.Errorf("%s condition returned unexpected type: %s", name, sqlizerType)
-			continue
 		}
 	}
 }
