@@ -2,6 +2,7 @@ package q2sql
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"strings"
 
@@ -80,7 +81,23 @@ type In struct {
 }
 
 func (in *In) ToSQL() (string, []interface{}, error) {
+	if len(in.Values) == 0 {
+		return "", nil, fmt.Errorf("'In' condition requires at least one value for field %s", in.Field)
+	}
 	return in.Field + " IN (?" + strings.Repeat(",?", len(in.Values)-1) + ")", in.Values, nil
+}
+
+// NotIn - Not in a set of values: field NOT IN (value, value2)
+type NotIn struct {
+	Field  string
+	Values []interface{}
+}
+
+func (n *NotIn) ToSQL() (string, []interface{}, error) {
+	if len(n.Values) == 0 {
+		return "", nil, fmt.Errorf("'NotIn' condition requires at least one value for field %s", n.Field)
+	}
+	return n.Field + " NOT IN (?" + strings.Repeat(",?", len(n.Values)-1) + ")", n.Values, nil
 }
 
 // Like - contains text: field like value
@@ -180,6 +197,19 @@ func (s OrderBy) String() string {
 
 func (s OrderBy) ToSQL() (string, []interface{}, error) {
 	return s.String(), nil, nil
+}
+
+// Not - Negates a single expression: NOT (expression)
+type Not struct {
+	Expr Sqlizer
+}
+
+func (n *Not) ToSQL() (string, []interface{}, error) {
+	sql, args, err := n.Expr.ToSQL()
+	if err != nil {
+		return "", nil, err
+	}
+	return "NOT (" + sql + ")", args, nil
 }
 
 // RawSQL is a raw SQL string without arguments

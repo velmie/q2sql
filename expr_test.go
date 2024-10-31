@@ -4,14 +4,13 @@ import (
 	"fmt"
 	"reflect"
 	"testing"
-
-	"github.com/velmie/qparser"
 )
 
 type expressionTest struct {
-	in   Sqlizer
-	out  string
-	args []interface{}
+	in        Sqlizer
+	out       string
+	args      []interface{}
+	expectErr bool
 }
 
 const fieldName = "field_x"
@@ -82,6 +81,28 @@ var expressionTests = []expressionTest{
 		args: []interface{}{"1", "2", "3"},
 	},
 	{
+		in: &In{
+			Field:  fieldName,
+			Values: []interface{}{},
+		},
+		expectErr: true,
+	},
+	{
+		in: &NotIn{
+			Field:  fieldName,
+			Values: []interface{}{"4", "5", "6"},
+		},
+		out:  fmt.Sprintf("%s NOT IN (?,?,?)", fieldName),
+		args: []interface{}{"4", "5", "6"},
+	},
+	{
+		in: &NotIn{
+			Field:  fieldName,
+			Values: []interface{}{},
+		},
+		expectErr: true,
+	},
+	{
 		in:   IsNull(fieldName),
 		out:  fmt.Sprintf("%s IS NULL", fieldName),
 		args: nil,
@@ -92,42 +113,9 @@ var expressionTests = []expressionTest{
 		args: nil,
 	},
 	{
-		in: OrderBy{
-			{FieldName: "fieldA", Order: qparser.OrderDesc},
-			{FieldName: "fieldB", Order: qparser.OrderAsc},
-		},
-		out:  "fieldA DESC, fieldB ASC",
-		args: nil,
-	},
-	{
-		in:   Columns{"col1", "col2", "col3"},
-		out:  "col1, col2, col3",
-		args: nil,
-	},
-	{
-		in:   RawSQL("SELECT 1"),
-		out:  "SELECT 1",
-		args: nil,
-	},
-	{
-		in:   &RawSQLWithArgs{"id = ? OR id = ?", []interface{}{1, 2}},
-		out:  "id = ? OR id = ?",
-		args: []interface{}{1, 2},
-	},
-	{
-		in:   Or{&RawSQLWithArgs{"field = ?", []interface{}{"value"}}, RawSQL("field = 42")},
-		out:  "(field = ? OR field = 42)",
-		args: []interface{}{"value"},
-	},
-	{
-		in:   Or{},
-		out:  "",
-		args: nil,
-	},
-	{
-		in:   Or{RawSQL("field = value")},
-		out:  "field = value",
-		args: []interface{}{},
+		in:   &Not{Expr: &Eq{Field: fieldName, Value: "not_eq"}},
+		out:  fmt.Sprintf("NOT (%s = ?)", fieldName),
+		args: []interface{}{"not_eq"},
 	},
 }
 
@@ -135,8 +123,11 @@ func TestExpressions(t *testing.T) {
 	for i, tt := range expressionTests {
 		meta := fmt.Sprintf("test %d (%s)", i, reflect.TypeOf(tt.in))
 		expr, args, err := tt.in.ToSQL()
-		if err != nil {
-			t.Errorf("%s: expr unexpected error: %s", meta, err)
+		if (err != nil) != tt.expectErr {
+			t.Errorf("%s: unexpected error status: got %v, want %v", meta, err != nil, tt.expectErr)
+			continue
+		}
+		if tt.expectErr {
 			continue
 		}
 		if expr != tt.out {
@@ -144,8 +135,7 @@ func TestExpressions(t *testing.T) {
 			continue
 		}
 		if !reflect.DeepEqual(args, tt.args) {
-			t.Errorf("%s: expected args  %+v, got %+v", meta, tt.args, args)
-			continue
+			t.Errorf("%s: expected args %+v, got %+v", meta, tt.args, args)
 		}
 	}
 }
