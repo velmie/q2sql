@@ -129,7 +129,7 @@ type Or []Sqlizer
 
 func (or Or) ToSQL() (sql string, args []interface{}, err error) {
 	if len(or) == 0 {
-		return
+		return "", nil, fmt.Errorf("'Or' requires at least one condition")
 	}
 	group := len(or) > 1
 	expr := new(bytes.Buffer)
@@ -146,6 +146,34 @@ func (or Or) ToSQL() (sql string, args []interface{}, err error) {
 	}
 	sql = expr.String()
 	return
+}
+
+// And connects multiple expressions with the "AND" statement
+type And []Sqlizer
+
+func (and And) ToSQL() (sql string, args []interface{}, err error) {
+	if len(and) == 0 {
+		return "", nil, fmt.Errorf("'And' requires at least one condition")
+	}
+
+	group := len(and) > 1
+	expr := new(bytes.Buffer)
+	args = make([]interface{}, 0)
+
+	if group {
+		expr.WriteByte('(')
+	}
+
+	args, err = appendToSQL(and, expr, " AND ", args)
+	if err != nil {
+		return "", nil, err
+	}
+
+	if group {
+		expr.WriteByte(')')
+	}
+
+	return expr.String(), args, nil
 }
 
 // RawSQLWithArgs is a free form sql with possible arguments
